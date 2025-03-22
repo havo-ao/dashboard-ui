@@ -1,5 +1,9 @@
 .role {
-    float: right;
-    align-items: center;
-    display: flex;
+  float: right;
+  align-items: center;
+  display: flex;
+}
+
+ion-content {
+  --background: #c2d7c4;
 }
