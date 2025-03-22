@@ -1,36 +1,39 @@
 import { useEffect, useState } from "react";
 import {
   IonAvatar,
-  IonBadge,
   IonButton,
   IonCol,
   IonGrid,
   IonIcon,
-  IonImg,
   IonItem,
   IonLabel,
-  IonNote,
   IonPage,
   IonRow,
   IonText,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardSubtitle,
+  IonCardTitle,
+  IonList,
+  IonNote,
 } from "@ionic/react";
 import {
-  cogOutline,
-  eyeOutline,
-  logOutOutline,
-  mailOutline,
-  mapOutline,
-  settingsOutline,
+  bicycle,
+  car,
+  carSport,
+  chevronDownOutline,
+  fastFood,
+  flash,
+  shield,
 } from "ionicons/icons";
 
-import "./Tab1.css";
 import CustomPage from "../main/CustomPage";
-
-import { PageHeader } from "../components/PageHeader";
 import { Modal } from "../components/Modal";
-import { useSideMenuUpdate, useSideMenu } from "../main/SideMenuProvider";
-import { Link } from "react-router-dom";
-import { tab1SideMenu } from "../main/PageSideMenus";
+import { useSideMenuUpdate } from "../main/SideMenuProvider";
+import "./Tab1.css";
+
+const ENERGY_RATE_COP_PER_KWH = 1030; // Tarifa fija en COP/kWh
 
 const Tab1 = (props) => {
   const pageName = "Dashboard";
@@ -38,15 +41,40 @@ const Tab1 = (props) => {
   const setSideMenu = useSideMenuUpdate();
 
   const [showModal, setShowModal] = useState(false);
-  const [modalOptions, setModalOptions] = useState(false);
+  const [modalOptions, setModalOptions] = useState({});
+  const [selectedSection, setSelectedSection] = useState("");
+  const [activePeriod, setActivePeriod] = useState(null); // Controla la expansión
 
-  const handleModal = async (index) => {
-    await setModalOptions(tab1SideMenu[index]);
+  const energyData = {
+    today: { kWh: 120 },
+    week: { kWh: 750 },
+    month: { kWh: 3200 },
+    sixMonths: { kWh: 18000 },
+  };
+
+  const sections = [
+    { name: "General Plant", icon: flash },
+    { name: "Kitchen", icon: fastFood },
+    { name: "Bicycle Chargers", icon: bicycle },
+    { name: "Scooter Chargers", icon: carSport },
+    { name: "Car Chargers", icon: car },
+    { name: "Security", icon: shield },
+  ];
+
+  const handleSectionClick = (section) => {
+    setSelectedSection(section);
+    setModalOptions({
+      name: section,
+      text: "Select a period",
+      icon: sections.find((sec) => sec.name === section).icon,
+      periods: ["today", "week", "month", "sixMonths"],
+    });
     setShowModal(true);
   };
 
-  //	Access other side menu options here
-  const sideMenu = useSideMenu();
+  const handlePeriodClick = (period) => {
+    setActivePeriod((prev) => (prev === period ? null : period)); // Alternar expansión
+  };
 
   useEffect(() => {
     if (props.location.pathname === "/tabs/tab1") {
@@ -60,67 +88,59 @@ const Tab1 = (props) => {
 
   return (
     <IonPage id={pageName}>
-      <CustomPage name={pageName} sideMenu={true} sideMenuPosition="start">
-        <PageHeader count={sideMenuOptions.length} pageName={pageName} />
-
-        <IonItem lines="none">
-          <IonAvatar>
-            <IonImg src="/assets/alan.jpg" />
-          </IonAvatar>
-          <IonLabel className="ion-text-wrap ion-padding">
-            <h1>Author</h1>
-            <h2>
-              Alan Montgomery
-              <span className="role">
-                <IonBadge color="primary">Mobile Team Lead</IonBadge>
-              </span>
-            </h2>
-            <p>
-              Hey there, I'm Alan! Hopefully you can take something away from
-              this little sample app. Or even if it's to have a poke around and
-              see how I personally like to do things, that's OK too 👏🏻. Check
-              out each page, side menu and have a look at how things work.
-            </p>
-          </IonLabel>
-        </IonItem>
+      <CustomPage
+        contentClass="main-content"
+        name={pageName}
+        sideMenu={true}
+        sideMenuPosition="start"
+      >
         <IonGrid>
           <IonRow className="ion-text-center">
-            <IonCol size="12">
-              <IonText color="primary">
-                <p>Contact me on twitter if you need anything else :)</p>
-                <a
-                  href="https://twitter.com/intent/tweet?screen_name=93alan&ref_src=twsrc%5Etfw"
-                  className="twitter-mention-button"
-                  data-size="large"
-                  data-related="93alan,93alan"
-                  data-dnt="true"
-                  data-show-count="false"
-                >
-                  Tweet to @93alan
-                </a>
-              </IonText>
+            <IonCol size="12" sizeMd="6">
+              <IonCard>
+                <IonCardHeader>
+                  <IonCardTitle>Total Energy Consumption</IonCardTitle>
+                  <IonCardSubtitle>Summary of consumption</IonCardSubtitle>
+                </IonCardHeader>
+                <IonCardContent>
+                  <IonGrid>
+                    <IonRow>
+                      <IonCol>Today</IonCol>
+                      <IonCol>Monthly</IonCol>
+                    </IonRow>
+                  </IonGrid>
+                </IonCardContent>
+              </IonCard>
             </IonCol>
-          </IonRow>
-
-          <IonRow className="ion-text-center">
-            <IonCol size="12">
-              <IonText>
-                <h4>Check out Mobile DevCast</h4>
-                <p>
-                  A podcast dedicated to mobile app development and web native
-                  technology like ionic & capacitor!
-                </p>
-                <IonText color="warning">
-                  <a
-                    style={{ color: "yellow" }}
-                    href="https://mobiledevcast.com"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    https://mobiledevcast.com
-                  </a>
-                </IonText>
-              </IonText>
+            <IonCol size="12" sizeMd="6">
+              <IonCard>
+                <IonCardHeader>
+                  <IonCardTitle>Energy Consumption by Section</IonCardTitle>
+                </IonCardHeader>
+                <IonCardContent>
+                  <IonGrid>
+                    <IonRow>
+                      {sections.map((section, index) => (
+                        <IonCol
+                          key={index}
+                          size="6"
+                          className="ion-text-center"
+                          onClick={() => handleSectionClick(section.name)}
+                        >
+                          <IonIcon
+                            icon={section.icon}
+                            style={{
+                              fontSize: "2rem",
+                              marginBottom: "0.5rem",
+                            }}
+                          />
+                          <div>{section.name}</div>
+                        </IonCol>
+                      ))}
+                    </IonRow>
+                  </IonGrid>
+                </IonCardContent>
+              </IonCard>
             </IonCol>
           </IonRow>
         </IonGrid>
@@ -130,7 +150,48 @@ const Tab1 = (props) => {
             showModal={showModal}
             modalOptions={modalOptions}
             close={() => setShowModal(false)}
-          />
+          >
+            <IonList>
+              {modalOptions.periods.map((period, index) => {
+                const isActive = activePeriod === period;
+                return (
+                  <div key={index}>
+                    <IonItem button onClick={() => handlePeriodClick(period)}>
+                      <IonLabel>
+                        {period === "sixMonths"
+                          ? "Last Six Months"
+                          : `Current ${
+                              period.charAt(0).toUpperCase() + period.slice(1)
+                            }`}
+                      </IonLabel>
+                      <IonIcon
+                        slot="end"
+                        icon={chevronDownOutline}
+                        className={isActive ? "rotate" : ""}
+                      />
+                    </IonItem>
+                    {isActive && (
+                      <IonItem>
+                        <IonText>
+                          <p>
+                            <strong>{energyData[period].kWh} kWh</strong>
+                          </p>
+                          <p>
+                            <strong>
+                              {(
+                                energyData[period].kWh * ENERGY_RATE_COP_PER_KWH
+                              ).toLocaleString()}{" "}
+                              COP
+                            </strong>
+                          </p>
+                        </IonText>
+                      </IonItem>
+                    )}
+                  </div>
+                );
+              })}
+            </IonList>
+          </Modal>
         )}
       </CustomPage>
     </IonPage>
