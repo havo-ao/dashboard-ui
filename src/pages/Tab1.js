@@ -1,7 +1,5 @@
 import { useEffect, useState } from "react";
 import {
-  IonAvatar,
-  IonButton,
   IonCol,
   IonGrid,
   IonIcon,
@@ -31,9 +29,9 @@ import {
 import CustomPage from "../main/CustomPage";
 import { Modal } from "../components/Modal";
 import { useSideMenuUpdate } from "../main/SideMenuProvider";
-import "./Tab1.css";
+import { getTotalConsumption, getSectionConsumption } from "../api/energyApi"; // Importamos el Fake API
 
-const ENERGY_RATE_COP_PER_KWH = 1030; // Tarifa fija en COP/kWh
+import "./Tab1.css";
 
 const Tab1 = (props) => {
   const pageName = "Dashboard";
@@ -44,13 +42,10 @@ const Tab1 = (props) => {
   const [modalOptions, setModalOptions] = useState({});
   const [selectedSection, setSelectedSection] = useState("");
   const [activePeriod, setActivePeriod] = useState(null); // Controla la expansión
-
-  const energyData = {
-    today: { kWh: 120 },
-    week: { kWh: 750 },
-    month: { kWh: 3200 },
-    sixMonths: { kWh: 18000 },
-  };
+  const [totalConsumption, setTotalConsumption] = useState({
+    today: {},
+    month: {},
+  });
 
   const sections = [
     { name: "General Plant", icon: flash },
@@ -61,6 +56,15 @@ const Tab1 = (props) => {
     { name: "Security", icon: shield },
   ];
 
+  // 🔹 Cargar consumo total (Today & Monthly) al montar el componente
+  useEffect(() => {
+    setTotalConsumption({
+      today: getTotalConsumption("today"),
+      month: getTotalConsumption("month"),
+    });
+  }, []);
+
+  // 🔹 Manejar clic en una sección
   const handleSectionClick = (section) => {
     setSelectedSection(section);
     setModalOptions({
@@ -72,8 +76,14 @@ const Tab1 = (props) => {
     setShowModal(true);
   };
 
+  // 🔹 Manejar selección de período en el modal
   const handlePeriodClick = (period) => {
+    const sectionData = getSectionConsumption(selectedSection, period);
     setActivePeriod((prev) => (prev === period ? null : period)); // Alternar expansión
+    setModalOptions((prev) => ({
+      ...prev,
+      selectedData: sectionData,
+    }));
   };
 
   useEffect(() => {
@@ -96,6 +106,7 @@ const Tab1 = (props) => {
       >
         <IonGrid>
           <IonRow className="ion-text-center">
+            {/* 🔹 Tarjeta de Consumo Total */}
             <IonCol size="12" sizeMd="6">
               <IonCard>
                 <IonCardHeader>
@@ -105,13 +116,27 @@ const Tab1 = (props) => {
                 <IonCardContent>
                   <IonGrid>
                     <IonRow>
-                      <IonCol>Today</IonCol>
-                      <IonCol>Monthly</IonCol>
+                      <IonCol>
+                        <strong>Today:</strong> {totalConsumption.today.kWh} kWh
+                        <br />
+                        <strong>Cost:</strong>{" "}
+                        {totalConsumption?.today?.cost?.toLocaleString() || ""}{" "}
+                        COP
+                      </IonCol>
+                      <IonCol>
+                        <strong>Monthly:</strong> {totalConsumption.month.kWh}{" "}
+                        kWh
+                        <br />
+                        <strong>Cost:</strong>{" "}
+                        {totalConsumption?.month?.cost?.toLocaleString()} COP
+                      </IonCol>
                     </IonRow>
                   </IonGrid>
                 </IonCardContent>
               </IonCard>
             </IonCol>
+
+            {/* 🔹 Tarjeta de Consumo por Sección */}
             <IonCol size="12" sizeMd="6">
               <IonCard>
                 <IonCardHeader>
@@ -145,6 +170,7 @@ const Tab1 = (props) => {
           </IonRow>
         </IonGrid>
 
+        {/* 🔹 Modal para ver detalles por sección y período */}
         {showModal && modalOptions && (
           <Modal
             showModal={showModal}
@@ -170,17 +196,15 @@ const Tab1 = (props) => {
                         className={isActive ? "rotate" : ""}
                       />
                     </IonItem>
-                    {isActive && (
+                    {isActive && modalOptions.selectedData && (
                       <IonItem>
                         <IonText>
                           <p>
-                            <strong>{energyData[period].kWh} kWh</strong>
+                            <strong>{modalOptions.selectedData.kWh} kWh</strong>
                           </p>
                           <p>
                             <strong>
-                              {(
-                                energyData[period].kWh * ENERGY_RATE_COP_PER_KWH
-                              ).toLocaleString()}{" "}
+                              {modalOptions.selectedData.cost.toLocaleString()}{" "}
                               COP
                             </strong>
                           </p>

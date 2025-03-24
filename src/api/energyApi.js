@@ -2,9 +2,22 @@ import energyData from "./energy_consumption_db.json";
 
 const COST_PER_KWH = 552.7667;
 
+/**
+ * Formatea los valores en COP y kWh con separadores de miles/millones.
+ */
+const formatNumber = (value) => {
+  return parseFloat(value).toLocaleString("es-CO", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+};
+
+/**
+ * Filtra los datos según la cantidad de días.
+ */
 const filterDataByDate = (daysAgo) => {
   const today = new Date();
-  const startDate = new Date(today);
+  const startDate = new Date();
   startDate.setDate(today.getDate() - daysAgo);
 
   return energyData.filter((entry) => {
@@ -13,17 +26,22 @@ const filterDataByDate = (daysAgo) => {
   });
 };
 
+/**
+ * Calcula el consumo total de energía.
+ */
 export const getTotalConsumption = (period) => {
-  let days;
-  if (period === "today") days = 1;
-  else if (period === "week") days = 7;
-  else if (period === "month") days = 30;
-  else days = 180; // Últimos seis meses
-
+  const days =
+    period === "today"
+      ? 1
+      : period === "week"
+      ? 7
+      : period === "month"
+      ? 30
+      : 180;
   const filteredData = filterDataByDate(days);
 
-  const totalKWh = filteredData.reduce((sum, entry) => {
-    return (
+  const totalKWh = filteredData.reduce(
+    (sum, entry) =>
       sum +
       (entry.lamp_consumption || 0) +
       (entry.pc_consumption || 0) +
@@ -33,26 +51,29 @@ export const getTotalConsumption = (period) => {
       (entry.car_consumption || 0) +
       (entry.microwave_consumption || 0) +
       (entry.refrigerator_consumption || 0) +
-      (entry.ups_consumption || 0)
-    );
-  }, 0);
+      (entry.ups_consumption || 0),
+    0
+  );
 
   return {
-    kWh: totalKWh,
-    cost: totalKWh * COST_PER_KWH,
+    kWh: formatNumber(totalKWh),
+    cost: formatNumber(totalKWh * COST_PER_KWH),
   };
 };
 
+/**
+ * Obtiene el consumo de energía por sección.
+ */
 export const getSectionConsumption = (section, period) => {
-  const filteredData = filterDataByDate(
+  const days =
     period === "today"
       ? 1
       : period === "week"
       ? 7
       : period === "month"
       ? 30
-      : 180
-  );
+      : 180;
+  const filteredData = filterDataByDate(days);
 
   let totalKWh = 0;
 
@@ -106,11 +127,14 @@ export const getSectionConsumption = (section, period) => {
   }
 
   return {
-    kWh: totalKWh,
-    cost: totalKWh * COST_PER_KWH,
+    kWh: formatNumber(totalKWh),
+    cost: formatNumber(totalKWh * COST_PER_KWH),
   };
 };
 
+/**
+ * Obtiene el consumo de un empleado según su `internal_id`.
+ */
 export const getEmployeeConsumption = (internalId) => {
   const employeeData = energyData.filter(
     (entry) => entry.internal_id === internalId
@@ -136,7 +160,10 @@ export const getEmployeeConsumption = (internalId) => {
       0
     );
 
-    return { kWh: totalKWh, cost: totalKWh * COST_PER_KWH };
+    return {
+      kWh: formatNumber(totalKWh),
+      cost: formatNumber(totalKWh * COST_PER_KWH),
+    };
   };
 
   return {
