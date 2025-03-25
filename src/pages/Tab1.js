@@ -14,7 +14,6 @@ import {
   IonCardSubtitle,
   IonCardTitle,
   IonList,
-  IonNote,
 } from "@ionic/react";
 import {
   bicycle,
@@ -29,8 +28,11 @@ import {
 import CustomPage from "../main/CustomPage";
 import { Modal } from "../components/Modal";
 import { useSideMenuUpdate } from "../main/SideMenuProvider";
-import { getTotalConsumption, getSectionConsumption } from "../api/energyApi"; // Importamos el Fake API
-
+import { 
+  getTotalConsumption, 
+  getSectionConsumption,
+  formatNumber 
+} from "../api/energyApi";  
 import "./Tab1.css";
 
 const Tab1 = (props) => {
@@ -41,12 +43,13 @@ const Tab1 = (props) => {
   const [showModal, setShowModal] = useState(false);
   const [modalOptions, setModalOptions] = useState({});
   const [selectedSection, setSelectedSection] = useState("");
-  const [activePeriod, setActivePeriod] = useState(null); // Controla la expansión
+  const [activePeriod, setActivePeriod] = useState(null);
   const [totalConsumption, setTotalConsumption] = useState({
-    today: {},
-    month: {},
+    today: { kWh: "0.00", cost: "0.00" },
+    labourWeek: { kWh: "0.00", cost: "0.00" },
+    month: { kWh: "0.00", cost: "0.00" },
   });
-
+  
   const sections = [
     { name: "General Plant", icon: flash },
     { name: "Kitchen", icon: fastFood },
@@ -56,34 +59,49 @@ const Tab1 = (props) => {
     { name: "Security", icon: shield },
   ];
 
-  // 🔹 Cargar consumo total (Today & Monthly) al montar el componente
   useEffect(() => {
-    setTotalConsumption({
-      today: getTotalConsumption("today"),
-      month: getTotalConsumption("month"),
-    });
+    const fetchConsumption = async () => {
+      try {
+        const todayData = await getTotalConsumption("today");
+        const labourWeekData = await getTotalConsumption("labour_week");
+        const monthData = await getTotalConsumption("month");
+
+        setTotalConsumption({
+          today: todayData,
+          labourWeek: labourWeekData,
+          month: monthData,
+        });
+      } catch (error) {
+        console.error("Error fetching consumption data:", error);
+      }
+    };
+
+    fetchConsumption();
   }, []);
 
-  // 🔹 Manejar clic en una sección
   const handleSectionClick = (section) => {
     setSelectedSection(section);
     setModalOptions({
       name: section,
       text: "Select a period",
       icon: sections.find((sec) => sec.name === section).icon,
-      periods: ["today", "week", "month", "sixMonths"],
+      periods: ["today", "labour_week", "week", "month", "sixMonths"],
     });
     setShowModal(true);
   };
 
-  // 🔹 Manejar selección de período en el modal
-  const handlePeriodClick = (period) => {
-    const sectionData = getSectionConsumption(selectedSection, period);
-    setActivePeriod((prev) => (prev === period ? null : period)); // Alternar expansión
-    setModalOptions((prev) => ({
-      ...prev,
-      selectedData: sectionData,
-    }));
+  const handlePeriodClick = async (period) => {
+    try {
+      const sectionData = await getSectionConsumption(selectedSection, period);
+      
+      setActivePeriod((prev) => (prev === period ? null : period));
+      setModalOptions((prev) => ({
+        ...prev,
+        selectedData: sectionData,
+      }));
+    } catch (error) {
+      console.error("Error loading section data:", error);
+    }
   };
 
   useEffect(() => {
@@ -106,7 +124,6 @@ const Tab1 = (props) => {
       >
         <IonGrid>
           <IonRow className="ion-text-center">
-            {/* 🔹 Tarjeta de Consumo Total */}
             <IonCol size="12" sizeMd="6">
               <IonCard>
                 <IonCardHeader>
@@ -117,18 +134,14 @@ const Tab1 = (props) => {
                   <IonGrid>
                     <IonRow>
                       <IonCol>
-                        <strong>Today:</strong> {totalConsumption.today.kWh} kWh
+                        <strong>Today:</strong> {totalConsumption.today.kWh} kWh 
                         <br />
-                        <strong>Cost:</strong>{" "}
-                        {totalConsumption?.today?.cost?.toLocaleString() || ""}{" "}
-                        COP
+                        <strong>Cost:</strong> ${totalConsumption.today.cost} COP
                       </IonCol>
                       <IonCol>
-                        <strong>Monthly:</strong> {totalConsumption.month.kWh}{" "}
-                        kWh
+                        <strong>Monthly:</strong> {totalConsumption.month.kWh} kWh
                         <br />
-                        <strong>Cost:</strong>{" "}
-                        {totalConsumption?.month?.cost?.toLocaleString()} COP
+                        <strong>Cost:</strong> ${totalConsumption.month.cost} COP
                       </IonCol>
                     </IonRow>
                   </IonGrid>
@@ -136,7 +149,6 @@ const Tab1 = (props) => {
               </IonCard>
             </IonCol>
 
-            {/* 🔹 Tarjeta de Consumo por Sección */}
             <IonCol size="12" sizeMd="6">
               <IonCard>
                 <IonCardHeader>
@@ -149,17 +161,14 @@ const Tab1 = (props) => {
                         <IonCol
                           key={index}
                           size="6"
-                          className="ion-text-center"
+                          className="ion-text-center section-col"
                           onClick={() => handleSectionClick(section.name)}
                         >
                           <IonIcon
                             icon={section.icon}
-                            style={{
-                              fontSize: "2rem",
-                              marginBottom: "0.5rem",
-                            }}
+                            className="section-icon"
                           />
-                          <div>{section.name}</div>
+                          <div className="section-name">{section.name}</div>
                         </IonCol>
                       ))}
                     </IonRow>
@@ -170,7 +179,6 @@ const Tab1 = (props) => {
           </IonRow>
         </IonGrid>
 
-        {/* 🔹 Modal para ver detalles por sección y período */}
         {showModal && modalOptions && (
           <Modal
             showModal={showModal}
@@ -182,13 +190,15 @@ const Tab1 = (props) => {
                 const isActive = activePeriod === period;
                 return (
                   <div key={index}>
-                    <IonItem button onClick={() => handlePeriodClick(period)}>
+                    <IonItem 
+                      button 
+                      onClick={() => handlePeriodClick(period)}
+                      detail={false}
+                    >
                       <IonLabel>
                         {period === "sixMonths"
                           ? "Last Six Months"
-                          : `Current ${
-                              period.charAt(0).toUpperCase() + period.slice(1)
-                            }`}
+                          : `Current ${period.charAt(0).toUpperCase() + period.slice(1)}`}
                       </IonLabel>
                       <IonIcon
                         slot="end"
@@ -198,17 +208,18 @@ const Tab1 = (props) => {
                     </IonItem>
                     {isActive && modalOptions.selectedData && (
                       <IonItem>
-                        <IonText>
-                          <p>
-                            <strong>{modalOptions.selectedData.kWh} kWh</strong>
-                          </p>
-                          <p>
-                            <strong>
-                              {modalOptions.selectedData.cost.toLocaleString()}{" "}
-                              COP
-                            </strong>
-                          </p>
-                        </IonText>
+                        <IonGrid className="consumption-summary">
+                          <IonRow>
+                            <IonCol>
+                              <strong>{modalOptions.selectedData.kWh} kWh</strong>
+                            </IonCol>
+                          </IonRow>
+                          <IonRow>
+                            <IonCol>
+                              <strong>${modalOptions.selectedData.cost} COP</strong>
+                            </IonCol>
+                          </IonRow>
+                        </IonGrid>
                       </IonItem>
                     )}
                   </div>

@@ -1,0 +1,60 @@
+/* Estilos para Tab2 */
+
+/* Fondo y estructura general */
+IonPage {
+    --background: #4CAF50; /* Verde corporativo */
+  }
+  
+  /* Títulos y textos */
+  IonCardTitle, IonLabel {
+    color: #0000FF; /* Azul corporativo */
+    font-weight: bold;
+  }
+  
+  /* Estilos para los visores blancos */
+  IonCard {
+    background-color: white;
+    border-radius: 10px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);
+  }
+  
+  /* Botones dentro de los visores */
+  .custom-button {
+    height: 100px;
+    background-color: white;
+    color: black;
+    border: 1px solid #ccc;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-transform: none;
+  }
+  
+  /* Estilo para el empleado seleccionado */
+  IonItem {
+    background-color: white;
+    border-radius: 5px;
+    margin: 5px 0;
+  }
+  
+  /* Icono de avatar */
+  IonAvatar IonIcon {
+    color: #0000FF;
+    font-size: 2rem;
+  }
+  
+  /* Menú inferior */
+  IonTabBar {
+    background-color: #4CAF50;
+  }
+  IonTabButton {
+    color: white;
+  }
+  IonTabButton[aria-selected="true"] {
+    background-color: #2E7D32;
+  }
+  .custom-button {
+    --background: white !important;
+    --color: black !important;
+    border: 1px solid #ccc;
+  }
