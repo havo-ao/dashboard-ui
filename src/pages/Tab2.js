@@ -23,15 +23,13 @@ import CustomPage from "../main/CustomPage";
 import { useSideMenuUpdate } from "../main/SideMenuProvider";
 import "./Tab2.css";
 
-
-import employeesData from "../api/energy_consumption_db.json"; 
+import employeesData from "../api/energy_consumption_db.json";
 
 const Tab2 = (props) => {
   const pageName = "Trend Overview";
   const setSideMenu = useSideMenuUpdate();
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [employees, setEmployees] = useState([]); 
   const history = useHistory();
 
   useEffect(() => {
@@ -40,18 +38,8 @@ const Tab2 = (props) => {
     }
   }, [props.location, props.sideMenuOptions, setSideMenu]);
 
-  // Cargar los empleados en el estado
-  useEffect(() => {
-    setEmployees(employeesData);
-  }, []);
-
-  const handleEmployeeSelect = (employee) => {
-    setSelectedEmployee(employee);
-  };
-
-  // Filtrar empleados en base al término de búsqueda
-  const filteredEmployees = employees.filter((employee) =>
-    searchTerm.trim() === "" || employee.id.toLowerCase().includes(searchTerm.trim().toLowerCase())
+  const filteredEmployees = employeesData.filter(employee =>
+    employee.id.includes(searchTerm)
   );
 
   return (
@@ -67,13 +55,13 @@ const Tab2 = (props) => {
                 <IonCardContent>
                   <IonRow>
                     <IonCol size="6">
-                      <IonButton expand="full" className="custom-button" onClick={() => history.push("/indicators")}>
+                      <IonButton expand="full" onClick={() => history.push("/indicators")}>
                         Indicators
                       </IonButton>
                     </IonCol>
                     <IonCol size="6">
-                      <IonButton expand="full" className="custom-button" onClick={() => history.push("/energy-cost")}>
-                        Energy Cost Over Time
+                      <IonButton expand="full" onClick={() => history.push("/energy-cost")}>
+                        Energy Cost
                       </IonButton>
                     </IonCol>
                   </IonRow>
@@ -91,14 +79,17 @@ const Tab2 = (props) => {
                     <IonItem>
                       <IonIcon icon={searchOutline} slot="start" />
                       <IonInput
-                        placeholder="Buscar por ID"
+                        placeholder="Search ID"
                         value={searchTerm}
-                        onIonInput={(e) => setSearchTerm(e.detail.value || "")}
+                        onIonChange={e => setSearchTerm(e.detail.value || "")}
                       />
                     </IonItem>
                     <IonList>
-                      {filteredEmployees.map((employee, index) => (
-                        <IonItem button key={index} onClick={() => handleEmployeeSelect(employee)}>
+                      {filteredEmployees.map(employee => (
+                        <IonItem 
+                          button 
+                          key={employee.id}
+                          onClick={() => setSelectedEmployee(employee)}>
                           <IonAvatar slot="start">
                             <IonIcon icon={personCircle} size="large" />
                           </IonAvatar>
@@ -111,22 +102,25 @@ const Tab2 = (props) => {
               ) : (
                 <IonCard>
                   <IonCardHeader>
-                    <IonCardTitle>Employee ID: {selectedEmployee.id}</IonCardTitle>
+                    <IonCardTitle>ID: {selectedEmployee.id}</IonCardTitle>
                   </IonCardHeader>
                   <IonCardContent>
                     <IonText>
-                      <p><strong>Floor:</strong> {selectedEmployee.floor}</p>
-                      <p><strong>Lamp Consumption:</strong> {selectedEmployee.lamp_consumption} kWh</p>
-                      <p><strong>PC Consumption:</strong> {selectedEmployee.pc_consumption} kWh</p>
-                      <p><strong>Phone Consumption:</strong> {selectedEmployee.phone_consumption} kWh</p>
+                      <p>Floor: {selectedEmployee.floor}</p>
+                      {Object.entries(selectedEmployee).map(([key, value]) => 
+                        key.endsWith('_consumption') && (
+                          <p key={key}>
+                            <strong>{key.split('_')[0]}:</strong> {value} kWh
+                          </p>
+                        )
+                      )}
                     </IonText>
-                    <IonRow>
-                      <IonCol>
-                        <IonButton expand="full" className="back-button" onClick={() => setSelectedEmployee(null)}>
-                          Back
-                        </IonButton>
-                      </IonCol>
-                    </IonRow>
+                    <IonButton 
+                      expand="full" 
+                      onClick={() => setSelectedEmployee(null)}
+                    >
+                      Back
+                    </IonButton>
                   </IonCardContent>
                 </IonCard>
               )}
