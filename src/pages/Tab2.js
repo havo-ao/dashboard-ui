@@ -23,7 +23,7 @@ import CustomPage from "../main/CustomPage";
 import { useSideMenuUpdate } from "../main/SideMenuProvider";
 import "./Tab2.css";
 
-// Importar JSON correctamente
+
 import employeesData from "../api/energy_consumption_db.json"; 
 
 const Tab2 = (props) => {
@@ -31,7 +31,7 @@ const Tab2 = (props) => {
   const setSideMenu = useSideMenuUpdate();
   const [selectedEmployee, setSelectedEmployee] = useState(null);
   const [searchTerm, setSearchTerm] = useState("");
-  const [employees, setEmployees] = useState([]); // Estado para almacenar empleados
+  const [employees, setEmployees] = useState([]); 
   const history = useHistory();
 
   useEffect(() => {
@@ -58,7 +58,7 @@ const Tab2 = (props) => {
     <IonPage id={pageName}>
       <CustomPage name={pageName} sideMenu={true} sideMenuPosition="end">
         <IonGrid>
-          <IonRow>
+          <IonRow>  
             <IonCol size="12" sizeMd="6">
               <IonCard>
                 <IonCardHeader>
