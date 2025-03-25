@@ -1,113 +1,138 @@
 import { useEffect, useState } from "react";
 import {
-  archiveOutline,
-  checkmarkOutline,
-  mailOutline,
-  mailUnreadOutline,
-  mapOutline,
-  personOutline,
-  refreshOutline,
-  settingsSharp,
-} from "ionicons/icons";
-import { useSideMenuUpdate, useSideMenu } from "../main/SideMenuProvider";
-
-import "./Tab2.css";
-import CustomPage from "../main/CustomPage";
-
-import { PageHeader } from "../components/PageHeader";
-import { Modal } from "../components/Modal";
-import {
-  IonBadge,
-  IonChip,
+  IonAvatar,
+  IonButton,
+  IonCol,
   IonGrid,
+  IonIcon,
   IonItem,
   IonLabel,
-  IonList,
-  IonNote,
   IonPage,
+  IonRow,
+  IonCard,
+  IonCardContent,
+  IonCardHeader,
+  IonCardTitle,
+  IonList,
+  IonText,
+  IonInput,
 } from "@ionic/react";
-import { getInboxItems } from "../main/Utils";
+import { personCircle, searchOutline } from "ionicons/icons";
+import { useHistory } from "react-router-dom";
+import CustomPage from "../main/CustomPage";
+import { useSideMenuUpdate } from "../main/SideMenuProvider";
+import "./Tab2.css";
+
+// Importar JSON correctamente
+import employeesData from "../api/energy_consumption_db.json"; 
 
 const Tab2 = (props) => {
   const pageName = "Trend Overview";
-  var { sideMenuOptions } = props;
   const setSideMenu = useSideMenuUpdate();
-
-  const [Badge, setBadge] = useState(true);
-  const [showModal, setShowModal] = useState(false);
-  const [modalOptions, setModalOptions] = useState(false);
-
-  const inboxItems = getInboxItems();
-
-  const handleModal = async (index) => {
-    await setModalOptions(sideMenuOptions[index]);
-    setShowModal(true);
-  };
-
-  //	Access other side menu options here
-  const sideMenu = useSideMenu();
+  const [selectedEmployee, setSelectedEmployee] = useState(null);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [employees, setEmployees] = useState([]); // Estado para almacenar empleados
+  const history = useHistory();
 
   useEffect(() => {
     if (props.location.pathname === "/tabs/tab2") {
-      setSideMenu({
-        options: sideMenuOptions,
-        side: "start",
-        pageName: pageName,
-      });
-
-      sideMenuOptions = sideMenuOptions.filter(
-        (m) => m.title === "Timestamp style"
-      )[0].clickEvent = () => setBadge((Badge) => !Badge);
+      setSideMenu({ options: props.sideMenuOptions, side: "start", pageName });
     }
-  }, [props.location]);
+  }, [props.location, props.sideMenuOptions, setSideMenu]);
+
+  // Cargar los empleados en el estado
+  useEffect(() => {
+    setEmployees(employeesData);
+  }, []);
+
+  const handleEmployeeSelect = (employee) => {
+    setSelectedEmployee(employee);
+  };
+
+  // Filtrar empleados en base al término de búsqueda
+  const filteredEmployees = employees.filter((employee) =>
+    searchTerm.trim() === "" || employee.id.toLowerCase().includes(searchTerm.trim().toLowerCase())
+  );
 
   return (
     <IonPage id={pageName}>
       <CustomPage name={pageName} sideMenu={true} sideMenuPosition="end">
         <IonGrid>
-          <PageHeader count={sideMenuOptions.length} pageName={pageName} />
+          <IonRow>
+            <IonCol size="12" sizeMd="6">
+              <IonCard>
+                <IonCardHeader>
+                  <IonCardTitle>Historical Trend</IonCardTitle>
+                </IonCardHeader>
+                <IonCardContent>
+                  <IonRow>
+                    <IonCol size="6">
+                      <IonButton expand="full" className="custom-button" onClick={() => history.push("/indicators")}>
+                        Indicators
+                      </IonButton>
+                    </IonCol>
+                    <IonCol size="6">
+                      <IonButton expand="full" className="custom-button" onClick={() => history.push("/energy-cost")}>
+                        Energy Cost Over Time
+                      </IonButton>
+                    </IonCol>
+                  </IonRow>
+                </IonCardContent>
+              </IonCard>
+            </IonCol>
 
-          <IonList>
-            {inboxItems.map((item, index) => {
-              return (
-                <IonItem
-                  routerLink={`/tabs/tab2/${item.id}`}
-                  key={`item_${index}`}
-                  detail={true}
-                  lines="full"
-                  detailIcon={
-                    item.unread ? mailUnreadOutline : checkmarkOutline
-                  }
-                >
-                  <IonLabel>
-                    <h2>{item.sender}</h2>
-                    <h4>{item.subject}</h4>
-                    <p>{item.message}</p>
-                  </IonLabel>
-                  {Badge && (
-                    <IonBadge slot="end" style={{ fontSize: "0.7rem" }}>
-                      {item.time}
-                    </IonBadge>
-                  )}
-
-                  {!Badge && (
-                    <IonNote slot="end" style={{ fontSize: "0.9rem" }}>
-                      {item.time}
-                    </IonNote>
-                  )}
-                </IonItem>
-              );
-            })}
-          </IonList>
+            <IonCol size="12" sizeMd="6">
+              {!selectedEmployee ? (
+                <IonCard>
+                  <IonCardHeader>
+                    <IonCardTitle>Employee Performance</IonCardTitle>
+                  </IonCardHeader>
+                  <IonCardContent>
+                    <IonItem>
+                      <IonIcon icon={searchOutline} slot="start" />
+                      <IonInput
+                        placeholder="Buscar por ID"
+                        value={searchTerm}
+                        onIonInput={(e) => setSearchTerm(e.detail.value || "")}
+                      />
+                    </IonItem>
+                    <IonList>
+                      {filteredEmployees.map((employee, index) => (
+                        <IonItem button key={index} onClick={() => handleEmployeeSelect(employee)}>
+                          <IonAvatar slot="start">
+                            <IonIcon icon={personCircle} size="large" />
+                          </IonAvatar>
+                          <IonLabel>ID: {employee.id}</IonLabel>
+                        </IonItem>
+                      ))}
+                    </IonList>
+                  </IonCardContent>
+                </IonCard>
+              ) : (
+                <IonCard>
+                  <IonCardHeader>
+                    <IonCardTitle>Employee ID: {selectedEmployee.id}</IonCardTitle>
+                  </IonCardHeader>
+                  <IonCardContent>
+                    <IonText>
+                      <p><strong>Floor:</strong> {selectedEmployee.floor}</p>
+                      <p><strong>Lamp Consumption:</strong> {selectedEmployee.lamp_consumption} kWh</p>
+                      <p><strong>PC Consumption:</strong> {selectedEmployee.pc_consumption} kWh</p>
+                      <p><strong>Phone Consumption:</strong> {selectedEmployee.phone_consumption} kWh</p>
+                    </IonText>
+                    <IonRow>
+                      <IonCol>
+                        <IonButton expand="full" className="back-button" onClick={() => setSelectedEmployee(null)}>
+                          Back
+                        </IonButton>
+                      </IonCol>
+                    </IonRow>
+                  </IonCardContent>
+                </IonCard>
+              )}
+            </IonCol>
+          </IonRow>
         </IonGrid>
-
-        {showModal && modalOptions && (
-          <Modal
-            showModal={showModal}
-            modalOptions={modalOptions}
-            close={() => setShowModal(false)}
-          />
-        )}
       </CustomPage>
     </IonPage>
   );

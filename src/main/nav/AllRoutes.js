@@ -1,35 +1,27 @@
-//	Main Tabs
+// Main Tabs
 import Tab1 from "../../pages/Tab1";
 import Tab2 from "../../pages/Tab2";
 import Tab3 from "../../pages/Tab3";
 
-//  Side Menus
+// Side Menus
 import { tab1SideMenu, tab2SideMenu, tab3SideMenu } from "../PageSideMenus";
 
-//  Main tab children
+// Main tab children
 import Settings from "../../pages/Settings";
 
-//  Sub pages
+// Sub pages
 import InboxItem from "../../pages/InboxItem";
+import EnergyCostPage from "../../pages/EnergyCostPage";
+import IndicatorPage from "../../pages/IndicatorPage"; // ✅ Corrección del nombre de importación
 
-//	Tab icons
+// Tab icons
 import { flashOutline, trendingDown, giftOutline } from "ionicons/icons";
 
-//  Import custom tab menu
+// Import custom tab menu
 import TabMenu from "../TabMenu";
 import SubRoutes from "./SubRoutes";
 
-//	Array of objects representing tab pages
-//  These will be the main tabs across the app
-
-//  *   PARAMS per tab object   *
-//  isTab = true will make the tab appear
-//  default = the default tab page to open and be redirected to at "/"
-//  NOTE: there should only be one default tab (default: true)
-//  label = the label to show with the tab
-//  component = the component related to this tab page
-//  icon = icon to show on the tab bar menu
-//  path = the path which the tab is accessible
+// Array de objetos representando las tabs principales en la app
 export const tabRoutes = [
   {
     label: "Dashboard",
@@ -63,36 +55,23 @@ export const tabRoutes = [
   },
 ];
 
-//  Array of objects representing children pages of tabs
-
-//  *   PARAMS per tab object   *
-//  isTab = should always be set to false for these
-//  component = the component related to this tab page
-//  path = the path which the tab is accessible
-
-//  These pages should be related to tab pages and be held within the same path
-//  E.g. /tabs/tab1/child
+// Array de rutas hijas dentro de tabs principales
 const tabChildrenRoutes = [
   { component: InboxItem, path: "/tabs/tab2/:id", isTab: false },
 ];
 
-//  Array of objects representing sub pages
+// Rutas para subpáginas que no pertenecen a un tab principal
+const subPageRoutes = [
+  { component: Settings, path: "/settings" },
+  { component: EnergyCostPage, path: "/energy-cost" },
+  { component: IndicatorPage, path: "/indicators" }, // ✅ Corrección del nombre
+];
 
-//  *   PARAMS per tab object   *
-//  component = the component related to this sub page
-//  path = the path which the sub page is accessible
-
-//  This array should be sub pages which are not directly related to a tab page
-//  E.g. /child
-const subPageRoutes = [{ component: Settings, path: "/settings" }];
-
-//  Let's combine these together as they need to be controlled within the same IonRouterOutlet
+// Combinamos todas las rutas de tabs y sus hijos
 const tabsAndChildrenRoutes = [...tabRoutes, ...tabChildrenRoutes];
 
-//  Render sub routes
+// Renderizamos las subpáginas
 export const SubPages = () => <SubRoutes routes={subPageRoutes} />;
 
-//	Render tab menu
-export const Tabs = () => (
-  <TabMenu tabs={tabsAndChildrenRoutes} position="bottom" />
-);
+// Renderizamos el menú de tabs
+export const Tabs = () => <TabMenu tabs={tabsAndChildrenRoutes} position="bottom" />;
